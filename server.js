@@ -20,13 +20,26 @@ app.post("/TODOs", (req, res) => {
     id = ++id;
     const title = req.body.title;
     const isDone = false;
-    const TaskToDo = {
+    const newTaskToDo = {
       id,
       title,
       isDone,
     };
-    tasksToDo.push(TaskToDo);
-    res.json(TaskToDo);
+    tasksToDo.push(newTaskToDo);
+    res.json(newTaskToDo);
+  } catch (error) {
+    res.json({
+      error: error.message,
+    });
+  }
+});
+
+// UPDATE / PUT
+app.put("/TODOs/:id", (req, res) => {
+  try {
+    const newTaskToDo = tasksToDo.find((task) => req.params.id == task.id);
+    newTaskToDo.title = req.body.title;
+    res.json(newTaskToDo);
   } catch (error) {
     res.json({
       error: error.message,
