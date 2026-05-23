@@ -5,14 +5,14 @@ const port = 3000;
 
 app.use(express.json());
 
-const tasksToDo = [];
+let tasksToDo = [];
 
 // Listar TODOs, tarefas para o usuario
 app.get("/TODOs", (req, res) => {
   res.json(tasksToDo);
 });
 
-let id = 0;
+let id = -1;
 
 // CREATE / POST
 app.post("/TODOs", (req, res) => {
@@ -40,6 +40,18 @@ app.put("/TODOs/:id", (req, res) => {
     const newTaskToDo = tasksToDo.find((task) => req.params.id == task.id);
     newTaskToDo.title = req.body.title;
     res.json(newTaskToDo);
+  } catch (error) {
+    res.json({
+      error: error.message,
+    });
+  }
+});
+
+// DELETE
+app.delete("/TODOs/:id", (req, res) => {
+  try {
+    tasksToDo = tasksToDo.filter((task) => req.params.id != task.indexTask);
+    res.json(tasksToDo);
   } catch (error) {
     res.json({
       error: error.message,
