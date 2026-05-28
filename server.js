@@ -30,6 +30,12 @@ app.get("/todos", async (req, res) => {
 // CREATE / POST
 app.post("/todos", async (req, res) => {
   try {
+    if (!req.body.title) {
+      return res.status(400).json({
+        message: "Title empty, title is required.",
+      });
+    }
+
     await knex("taskstodo")
       .insert({
         title: req.body.title,
@@ -68,6 +74,12 @@ app.post("/todos", async (req, res) => {
 // UPDATE / PUT
 app.put("/todos/:id", async (req, res) => {
   try {
+    if (!req.body.title) {
+      return res.status(400).json({
+        message: "Title required.",
+      });
+    }
+
     const updatedRows = await knex("taskstodo")
       .where("id", req.params.id)
       .update({
@@ -79,6 +91,7 @@ app.put("/todos/:id", async (req, res) => {
         message: "Task not found",
       });
     }
+
     res.status(200).json({
       message: `The task ${req.params.id} was updated with Success`,
     });
@@ -108,7 +121,7 @@ app.delete("/todos/:id", async (req, res) => {
       .del();
 
     if (deletedRows === 0) {
-      res.status(404).json({
+      return res.status(404).json({
         message: "Task not found",
       });
     }
