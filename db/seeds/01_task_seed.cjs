@@ -1,8 +1,5 @@
 exports.seed = async function (knex) {
 
-  // Deleta registros existentes
-  await knex("taskstodo").del();
-
   // Insere novos registros
   await knex("taskstodo").insert([
     {

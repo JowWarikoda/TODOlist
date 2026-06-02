@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable("taskstodo", function (table) {
+  return knex.schema.createTable("todos", function (table) {
     table.increments("id"); // Cria um campo "id" e define como PK (Primary Key)
     table.string("title", 200).notNullable();
     table.boolean("isDone").notNullable().defaultTo(false);
@@ -7,5 +7,5 @@ exports.up = function (knex) {
 };
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("taskstodo");
+  return knex.schema.dropTable("todos");
 };
