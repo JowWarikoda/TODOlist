@@ -1,60 +1,131 @@
 import express from "express";
+import knex from "./db/knex.js";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 
-let tasksToDo = [];
-
 // Listar TODOs, tarefas para o usuario
-app.get("/TODOs", (req, res) => {
-  res.json(tasksToDo);
+app.get("/todos", async (req, res) => {
+  try {
+    const todos = await knex.select().from("todos");
+    res.status(200).json(todos);
+
+    /* Raw Version, kinda longer
+    await knex.raw("SELECT * from todos").then(function (todos) {
+      res.status(200).send(todos.rows);
+    }); */
+  } catch (e) {
+    res.status(400).json({
+      e: e.message,
+    });
+  }
 });
 
-let id = -1;
-
 // CREATE / POST
-app.post("/TODOs", (req, res) => {
+app.post("/todos", async (req, res) => {
   try {
-    id = ++id;
-    const title = req.body.title;
-    const isDone = false;
-    const newTaskToDo = {
-      id,
-      title,
-      isDone,
-    };
-    tasksToDo.push(newTaskToDo);
-    res.json(newTaskToDo);
-  } catch (error) {
-    res.json({
-      error: error.message,
+    if (!req.body.title) {
+      return res.status(400).json({
+        message: "Title empty, title is required.",
+      });
+    }
+
+    await knex("todos").insert({
+      title: req.body.title,
+    });
+
+    res.status(201).json({
+      message: "New Task created with Success",
+      todos: await knex.select().from("todos"),
+    });
+
+    /* Raw Version
+    await knex.raw("INSERT into todos (title) values (?)", ["NEW TASK CREATED 1"]).then(function () {
+        knex.select().from("todos").then(function (newtasktodo) {res.status(201).send(newtasktodo);
+          }); 
+      }); */
+  } catch (e) {
+    if (e.code === "22001") {
+      // String Data Right Truncation -> Code (22001)
+      return res.status(400).json({
+        message:
+          "Title exceeds character limit. Title can only have up to maximum 200 characters",
+      });
+    }
+
+    // Validação para impedir a criação de uma task vazia sem caracteres
+    res.status(400).json({
+      e: e.message,
     });
   }
 });
 
 // UPDATE / PUT
-app.put("/TODOs/:id", (req, res) => {
+app.put("/todos/:id", async (req, res) => {
   try {
-    const newTaskToDo = tasksToDo.find((task) => req.params.id == task.id);
-    newTaskToDo.title = req.body.title;
-    res.json(newTaskToDo);
-  } catch (error) {
-    res.json({
-      error: error.message,
+    if (!req.body.title) {
+      return res.status(400).json({
+        message: "Title required.",
+      });
+    }
+
+    const task = await knex.select().from("todos").where("id", req.params.id);
+    if (task.length === 0) {
+      return res.status(404).json({
+        message: "Task not found.",
+      });
+    }
+
+    await knex("todos").where("id", req.params.id).update({
+      title: req.body.title,
+      isDone: req.body.isDone,
+    });
+    res.status(200).json({
+      message: `The task ${req.params.id} was updated with Success!`,
+    });
+
+    /*Raw Version
+    knex.raw('UPDATE todos SET ' + req.body.field + " = ? where id = ?", [req.body.value, reqparams.id])
+      res
+        .status(200)
+        .json({ message: "Task updated with Success!", newTaskToDo }); */
+  } catch (e) {
+    if (e.code === "22001") {
+      return res.status(400).json({
+        message:
+          "Title exceeds character limit. Title can only have up to maximum 200 characters",
+      });
+    }
+    res.status(500).json({
+      error: e.message,
     });
   }
 });
 
 // DELETE
-app.delete("/TODOs/:id", (req, res) => {
+app.delete("/todos/:id", async (req, res) => {
   try {
-    tasksToDo = tasksToDo.filter((task) => req.params.id != task.indexTask);
-    res.json(tasksToDo);
-  } catch (error) {
-    res.json({
-      error: error.message,
+    const task = await knex.select().from("todos").where("id", req.params.id);
+
+    if (task.length === 0) {
+      return res.status(404).json({
+        message: "Task not found.",
+      });
+    }
+
+    await knex("todos").where("id", req.params.id).del();
+    res.status(200).json({
+      //Talvez o certo seja usar 204
+      message: `Task ${req.params.id} deleted with Success!`,
+    });
+
+    /* Raw Version
+    app.delete('DELETE FROM todos where id = ?', req.params.id) */
+  } catch (e) {
+    res.status(500).json({
+      e: e.message,
     });
   }
 });
