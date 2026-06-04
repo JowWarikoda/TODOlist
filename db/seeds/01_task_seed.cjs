@@ -1,7 +1,7 @@
 exports.seed = async function (knex) {
 
   // Insere novos registros
-  await knex("taskstodo").insert([
+  await knex("todos").insert([
     {
       title: "Task 01 TEST",
       isDone: false,

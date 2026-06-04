@@ -9,12 +9,12 @@ app.use(express.json());
 // Listar TODOs, tarefas para o usuario
 app.get("/todos", async (req, res) => {
   try {
-    const todos = await knex.select().from("taskstodo");
+    const todos = await knex.select().from("todos");
     res.status(200).json(todos);
 
     /* Raw Version, kinda longer
-    await knex.raw("SELECT * from taskstodo").then(function (tasksToDo) {
-      res.status(200).send(tasksToDo.rows);
+    await knex.raw("SELECT * from todos").then(function (todos) {
+      res.status(200).send(todos.rows);
     }); */
   } catch (e) {
     res.status(400).json({
@@ -32,18 +32,18 @@ app.post("/todos", async (req, res) => {
       });
     }
 
-    await knex("taskstodo").insert({
+    await knex("todos").insert({
       title: req.body.title,
     });
 
     res.status(201).json({
       message: "New Task created with Success",
-      taskstodo: await knex.select().from("taskstodo"),
+      todos: await knex.select().from("todos"),
     });
 
     /* Raw Version
-    await knex.raw("INSERT into taskstodo (title) values (?)", ["NEW TASK CREATED 1"]).then(function () {
-        knex.select().from("taskstodo").then(function (newtasktodo) {res.status(201).send(newtasktodo);
+    await knex.raw("INSERT into todos (title) values (?)", ["NEW TASK CREATED 1"]).then(function () {
+        knex.select().from("todos").then(function (newtasktodo) {res.status(201).send(newtasktodo);
           }); 
       }); */
   } catch (e) {
@@ -55,7 +55,7 @@ app.post("/todos", async (req, res) => {
       });
     }
 
-    // Validação para impedir a criação de uma task vazia sem caractere
+    // Validação para impedir a criação de uma task vazia sem caracteres
     res.status(400).json({
       e: e.message,
     });
@@ -71,17 +71,14 @@ app.put("/todos/:id", async (req, res) => {
       });
     }
 
-    const task = await knex
-      .select()
-      .from("taskstodo")
-      .where("id", req.params.id);
+    const task = await knex.select().from("todos").where("id", req.params.id);
     if (task.length === 0) {
       return res.status(404).json({
         message: "Task not found.",
       });
     }
 
-    await knex("taskstodo").where("id", req.params.id).update({
+    await knex("todos").where("id", req.params.id).update({
       title: req.body.title,
       isDone: req.body.isDone,
     });
@@ -90,7 +87,7 @@ app.put("/todos/:id", async (req, res) => {
     });
 
     /*Raw Version
-    knex.raw('UPDATE taskstodo SET ' + req.body.field + " = ? where id = ?", [req.body.value, reqparams.id])
+    knex.raw('UPDATE todos SET ' + req.body.field + " = ? where id = ?", [req.body.value, reqparams.id])
       res
         .status(200)
         .json({ message: "Task updated with Success!", newTaskToDo }); */
@@ -110,10 +107,7 @@ app.put("/todos/:id", async (req, res) => {
 // DELETE
 app.delete("/todos/:id", async (req, res) => {
   try {
-    const task = await knex
-      .select()
-      .from("taskstodo")
-      .where("id", req.params.id);
+    const task = await knex.select().from("todos").where("id", req.params.id);
 
     if (task.length === 0) {
       return res.status(404).json({
@@ -121,16 +115,14 @@ app.delete("/todos/:id", async (req, res) => {
       });
     }
 
-    await knex("taskstodo").where("id", req.params.id).del();
+    await knex("todos").where("id", req.params.id).del();
     res.status(200).json({
       //Talvez o certo seja usar 204
       message: `Task ${req.params.id} deleted with Success!`,
     });
 
     /* Raw Version
-    app.delete('DELETE FROM taskstodo wher id = ?', req.params.id) */
-
-    // RF05.03 Adicionar confirmacao de exclusao, entrada de dado pedindo um Y/N if Y entra pra delete se nao, nao deleta
+    app.delete('DELETE FROM todos where id = ?', req.params.id) */
   } catch (e) {
     res.status(500).json({
       e: e.message,
